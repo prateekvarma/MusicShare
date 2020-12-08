@@ -62,9 +62,30 @@ class UpdateTrack(graphene.Mutation):
         #return the class, with the field as defined in 1st line of class
         return UpdateTrack(track=track)
 
+class DeleteTrack(graphene.Mutation):
+    # In this case, we want only the track's ID to be returned, not the entire track
+    track_id = graphene.Int()
+
+    class Arguments:
+        track_id = graphene.Int(required=True)
+
+    def mutate(self, info, track_id):
+        # get the related user, to check if it's his track
+        user = info.context.user
+        # get the track according to the track_id from arguments
+        track = Track.objects.get(id=track_id)
+        #check if the track belongs to the user
+        if track.posted_by != user:
+            raise Exception('This track is not yours, you cannot delete it')
+
+        track.delete()
+        return DeleteTrack(track_id=track_id)
+
+
 
 #The below Mutation class should be now inherited from the base Mutation class
 class Mutation(graphene.ObjectType):
     #register your mutations here
     create_track = CreateTrack.Field()
     update_track = UpdateTrack.Field()
+    delete_track = DeleteTrack.Field()
