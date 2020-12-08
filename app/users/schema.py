@@ -16,6 +16,7 @@ class Query(graphene.ObjectType):
     def resolve_user(self, info, id):
         return get_user_model().objects.get(id=id)
 
+    #returns the current user, can be used to check if logged in
     def resolve_me(self, info):
         user = info.context.user
         if user.is_anonymous:
