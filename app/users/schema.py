@@ -10,7 +10,7 @@ class UserType(DjangoObjectType):
 
 class Query(graphene.ObjectType):
     user = graphene.Field(UserType, id=graphene.Int(required=True))
-    #me Query for JWT
+    #me Query for JWT to return current user
     me = graphene.Field(UserType)
 
     def resolve_user(self, info, id):
