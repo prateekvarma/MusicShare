@@ -17,10 +17,10 @@ class CreateUser(graphene.Mutation):
         password = graphene.String(required=True)
         email = graphene.String(required=True)
 
-    class mutate(self, info, username, password, email):
+    def mutate(self, info, username, password, email):
         #Use the default Django's user model
         user = get_user_model()(
-            username = username
+            username = username,
             email = email
         )
         #password needs to be set with set_password function
