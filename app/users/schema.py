@@ -26,6 +26,7 @@ class CreateUser(graphene.Mutation):
         #password needs to be set with set_password function
         user.set_password(password)
         user.save()
+        return CreateUser(user=user)
 
 class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()
