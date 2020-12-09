@@ -1,7 +1,9 @@
 import graphene
 from graphene_django import DjangoObjectType
 
-from .models import Track
+from .models import Track, Like
+# since the Like model uses get_user_model, we will import UserType
+from users.schema import UserType
 
 class TrackType(DjangoObjectType):
     #for TrackType to inherit the structure of Track, we define a meta class
@@ -81,6 +83,33 @@ class DeleteTrack(graphene.Mutation):
         track.delete()
         return DeleteTrack(track_id=track_id)
 
+class CreateLike(graphene.Mutation):
+    user = graphene.Field(UserType)
+    track = graphene.Field(TrackType)
+
+    class Arguments:
+        track_id = graphene.Int(required=True)
+
+    def mutate(self, info, track_id):
+        #get the current
+        user = info.context.user
+        #check if the user is logged in
+        if user.is_anonymous:
+            raise Exception('Login to like')
+
+        #get the track with it's id    
+        track = Track.objects.get(id=track_id)
+        #additional check, if track exists (not necessary)
+        if not track:
+            raise Exception('Cannot find track with that id')
+
+        #create the like
+        Like.objects.create(
+            user = user,
+            track = track
+        )
+        
+        return CreateLike(user=user, track=track)
 
 
 #The below Mutation class should be now inherited from the base Mutation class
@@ -89,3 +118,4 @@ class Mutation(graphene.ObjectType):
     create_track = CreateTrack.Field()
     update_track = UpdateTrack.Field()
     delete_track = DeleteTrack.Field()
+    create_like = CreateLike.Field()
