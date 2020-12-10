@@ -1,5 +1,6 @@
 import graphene
 from graphene_django import DjangoObjectType
+from graphql import GraphQLError
 
 from .models import Track, Like
 # since the Like model uses get_user_model, we will import UserType
@@ -39,7 +40,7 @@ class CreateTrack(graphene.Mutation):
         #get currently signed in user
         user = info.context.user
         if user.is_anonymous:
-            raise Exception('Login to add a track')
+            raise GraphQLError('Login to add a track')
 
         track = Track(title=title, description=description, url=url, posted_by=user)
         track.save()
@@ -63,7 +64,7 @@ class UpdateTrack(graphene.Mutation):
 
         #check if the posted_by field in track is differen than that's passed from context
         if track.posted_by != user:
-            raise Exception('This is not your track, you cannot update it')
+            raise GraphQLError('This is not your track, you cannot update it')
 
         #set the fields in user object that we got from the DB, to ones from the argument
         track.title = title
@@ -88,7 +89,7 @@ class DeleteTrack(graphene.Mutation):
         track = Track.objects.get(id=track_id)
         #check if the track belongs to the user
         if track.posted_by != user:
-            raise Exception('This track is not yours, you cannot delete it')
+            raise GraphQLError('This track is not yours, you cannot delete it')
 
         track.delete()
         return DeleteTrack(track_id=track_id)
@@ -105,13 +106,13 @@ class CreateLike(graphene.Mutation):
         user = info.context.user
         #check if the user is logged in
         if user.is_anonymous:
-            raise Exception('Login to like')
+            raise GraphQLError('Login to like')
 
         #get the track with it's id    
         track = Track.objects.get(id=track_id)
         #additional check, if track exists (not necessary)
         if not track:
-            raise Exception('Cannot find track with that id')
+            raise GraphQLError('Cannot find track with that id')
 
         #create the like
         Like.objects.create(
