@@ -1,6 +1,7 @@
 import graphene
 from graphene_django import DjangoObjectType
 from graphql import GraphQLError
+from django.db.models import Q
 
 from .models import Track, Like
 # since the Like model uses get_user_model, we will import UserType
@@ -19,14 +20,21 @@ class LikeType(DjangoObjectType):
 class Query(graphene.ObjectType):
     #get all tracks query #adding search argument for search functionality
     tracks = graphene.List(TrackType, search=graphene.String())
-    #get all likes
+    #get all likes  
     likes = graphene.List(LikeType)
 
     # adding search argument, and providing None as default
     def resolve_tracks(self, info, search=None):
         if search:
+            filter = (
+                Q(title__icontains=search) |
+                Q(description__icontains=search) |
+                Q(url__icontains=search) |
+                #posted_by is a column in Track that links to User, which has a field username
+                Q(posted_by__username__icontains=search)
+            )
             #filter() provides the search function, the argument format is (fieldname__searchtype = keyword-to-be-matched)
-            return Track.objects.filter(title__startswith=search)
+            return Track.objects.filter(filter)
         #if no search keyword, just return all tracks    
         return Track.objects.all()
 
